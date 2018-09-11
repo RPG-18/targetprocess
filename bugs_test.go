@@ -95,3 +95,20 @@ func TestBugsService_Create(t *testing.T) {
 	assert.Equal(`New Bug`, bug.Name)
 	assert.Equal(int64(2), bug.Project.Id)
 }
+
+func TestBugsService_CreateAssigned(t *testing.T) {
+	assert := assert.New(t)
+	cli := NewClient(ClientOpt{
+		AccessToken: "NjplaXdQeTJDOHVITFBta0QyME85QlhEOWpwTGdPM2V6VjIyelZlZ0NKWG1RPQ==",
+		Url:         "https://restapi.tpondemand.com",
+	})
+
+	bug, err := cli.Bugs().Create(BugDescription{
+		Name:    "New Bug",
+		Project: ProjectDescription{Id: 2},
+		Teams:   Teams{193},
+	})
+
+	assert.NoError(err)
+	assert.Equal(`New Bug`, bug.Name)
+}

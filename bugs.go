@@ -6,10 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	netUrl "net/url"
+	"strconv"
 )
 
 const (
 	bugEndpoint = `/api/v1/Bugs`
+)
+
+var (
+	emptyTeams = []byte(`{}`)
 )
 
 type BugsService struct {
@@ -100,11 +105,14 @@ type ProjectDescription struct {
 	Id int
 }
 
+type Teams []int
+
 type BugDescription struct {
 	//Id          uint64 `json:"Id,omitempty"`
 	Name        string
 	Description string
 	Project     ProjectDescription
+	Teams       Teams `json:"AssignedTeams, omitempty"`
 }
 
 func (b *BugsService) Create(description BugDescription) (Bug, error) {
@@ -132,4 +140,24 @@ func (b *BugsService) Create(description BugDescription) (Bug, error) {
 	dec := json.NewDecoder(resp.Body)
 	err = dec.Decode(&bug)
 	return bug, err
+}
+
+func (m Teams) MarshalJSON() ([]byte, error) {
+	if len(m) == 0 {
+		return emptyTeams, nil
+	}
+
+	buff := bytes.Buffer{}
+	buff.WriteByte('[')
+	for i, teamId := range m {
+		if i != 0 {
+			buff.WriteByte(',')
+		}
+		buff.WriteString(`{"Team":{"Id":`)
+		buff.WriteString(strconv.Itoa(teamId))
+		buff.WriteString(`}}`)
+	}
+
+	buff.WriteByte(']')
+	return buff.Bytes(), nil
 }
