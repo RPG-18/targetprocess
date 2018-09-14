@@ -129,7 +129,7 @@ func (b *BugsService) Create(description BugDescription) (Bug, error) {
 
 	url := fmt.Sprintf("%s%s?%s", b.client.Url(), bugEndpoint, values.Encode())
 	req, err := http.NewRequest(http.MethodPost, url, &buffer)
-	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Content-type", "application/json; charset=utf-8")
 
 	resp, err := b.client.do(req)
 	if err != nil {
