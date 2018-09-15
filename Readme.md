@@ -4,5 +4,5 @@ Features:
 - [x] /Bugs
     - [x] GET
     - [x] POST
-    - [ ] Del
+    - [x] Del
 

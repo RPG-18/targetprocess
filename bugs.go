@@ -46,8 +46,12 @@ func (b *BugsService) Search(query *Query) (BugsGetReply, error) {
 	if err != nil {
 		return reply, err
 	}
-
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return reply, b.client.extractError(resp)
+	}
+
 	dec := json.NewDecoder(resp.Body)
 	err = dec.Decode(&reply)
 
@@ -71,6 +75,9 @@ func (b *BugsService) Get(id int64) (Bug, error) {
 		return bug, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return bug, b.client.extractError(resp)
+	}
 
 	dec := json.NewDecoder(resp.Body)
 	err = dec.Decode(&bug)
@@ -137,6 +144,10 @@ func (b *BugsService) Create(description BugDescription) (Bug, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusCreated {
+		return bug, b.client.extractError(resp)
+	}
+
 	dec := json.NewDecoder(resp.Body)
 	err = dec.Decode(&bug)
 	return bug, err
@@ -160,4 +171,24 @@ func (m Teams) MarshalJSON() ([]byte, error) {
 
 	buff.WriteByte(']')
 	return buff.Bytes(), nil
+}
+
+func (b *BugsService) Delete(id int64) error {
+	values := defaultQuery.values()
+	b.client.prepare(&values)
+
+	url := fmt.Sprintf("%s%s/%d?%s", b.client.Url(), bugEndpoint, id, values.Encode())
+
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	resp, err := b.client.do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return b.client.extractError(resp)
+	}
+
+	return nil
 }

@@ -1,6 +1,7 @@
 package targetprocess
 
 import (
+	"encoding/xml"
 	"net/http"
 	"net/url"
 )
@@ -54,4 +55,18 @@ func (t *TPClient) prepare(values *url.Values) {
 	if t.opt.isAccessToken {
 		values.Add(`access_token`, t.opt.AccessToken)
 	}
+}
+
+func (t *TPClient) extractError(response *http.Response) error {
+	if response.StatusCode == http.StatusUnauthorized {
+		return Unauthorized
+	}
+
+	dec := xml.NewDecoder(response.Body)
+	var tpErr Error
+	if err := dec.Decode(&tpErr); err != nil {
+		return err
+	}
+
+	return tpErr
 }

@@ -2,16 +2,26 @@ package targetprocess
 
 import (
 	"github.com/stretchr/testify/assert"
+	"math"
 	"testing"
+)
+
+var (
+	basicAuth = ClientOpt{
+		User:     "John",
+		Password: "123",
+		Url:      "https://restapi.tpondemand.com",
+	}
+
+	accessToken = ClientOpt{
+		AccessToken: "NjplaXdQeTJDOHVITFBta0QyME85QlhEOWpwTGdPM2V6VjIyelZlZ0NKWG1RPQ==",
+		Url:         "https://restapi.tpondemand.com",
+	}
 )
 
 func TestBugsRequest_Get(t *testing.T) {
 	assert := assert.New(t)
-	cli := NewClient(ClientOpt{
-		User:     "John",
-		Password: "123",
-		Url:      "https://restapi.tpondemand.com",
-	})
+	cli := NewClient(basicAuth)
 
 	bug, err := cli.Bugs().Get(22)
 	assert.NoError(err)
@@ -22,10 +32,7 @@ func TestBugsRequest_Get(t *testing.T) {
 
 func TestBugsRequest_GetByAccessToken(t *testing.T) {
 	assert := assert.New(t)
-	cli := NewClient(ClientOpt{
-		AccessToken: "NjplaXdQeTJDOHVITFBta0QyME85QlhEOWpwTGdPM2V6VjIyelZlZ0NKWG1RPQ==",
-		Url:         "https://restapi.tpondemand.com",
-	})
+	cli := NewClient(accessToken)
 
 	bug, err := cli.Bugs().Get(22)
 	assert.NoError(err)
@@ -41,31 +48,21 @@ curl -u John:123 -g --url "https://restapi.tpondemand.com/api/v1/Bugs?where=(Ent
 */
 func TestBugsRequest_GetFromExample(t *testing.T) {
 	assert := assert.New(t)
-	cli := NewClient(ClientOpt{
-		User:     "John",
-		Password: "123",
-		Url:      "https://restapi.tpondemand.com",
-	})
+	cli := NewClient(basicAuth)
 
 	reply, err := cli.Bugs().Search(
-		Where(`(EntityState.IsFinal%20eq%20%27false%27)`).
+		Where(`(EntityState.IsFinal eq 'false')`).
 			Inclde(`Id`, `Name`, `Effort`, `Project`).
 			Order(OrderByDesc(`Effort`)).
 			Take(10))
 	assert.NoError(err)
 	assert.Equal(`https://restapi.tpondemand.com/api/v1/Bugs/?include=[Id,Name,Effort,Project]&orderByDesc=Effort&format=json&take=10&skip=10`, reply.Next)
 	assert.Len(reply.Items, 10)
-
-	assert.Equal(int64(22), reply.Items[0].Id)
 }
 
 func TestBugsService_Next(t *testing.T) {
 	assert := assert.New(t)
-	cli := NewClient(ClientOpt{
-		User:     "John",
-		Password: "123",
-		Url:      "https://restapi.tpondemand.com",
-	})
+	cli := NewClient(basicAuth)
 
 	const url = `https://restapi.tpondemand.com/api/v1/Bugs/?include=[Id,Name,Effort,Project]&orderByDesc=Effort&format=json&take=10&skip=10`
 	const next = `https://restapi.tpondemand.com/api/v1/Bugs/?include=[Id,Name,Effort,Project]&orderByDesc=Effort&format=json&take=10&skip=20`
@@ -80,11 +77,7 @@ func TestBugsService_Next(t *testing.T) {
 
 func TestBugsService_Create(t *testing.T) {
 	assert := assert.New(t)
-	cli := NewClient(ClientOpt{
-		User:     "John",
-		Password: "123",
-		Url:      "https://restapi.tpondemand.com",
-	})
+	cli := NewClient(basicAuth)
 
 	bug, err := cli.Bugs().Create(BugDescription{
 		Name:    "New Bug",
@@ -94,14 +87,17 @@ func TestBugsService_Create(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(`New Bug`, bug.Name)
 	assert.Equal(int64(2), bug.Project.Id)
+
+	_, err = cli.Bugs().Create(BugDescription{
+		Name:    "New Bug",
+		Project: ProjectDescription{Id: math.MaxInt32},
+	})
+	assert.Error(err)
 }
 
 func TestBugsService_CreateAssigned(t *testing.T) {
 	assert := assert.New(t)
-	cli := NewClient(ClientOpt{
-		AccessToken: "NjplaXdQeTJDOHVITFBta0QyME85QlhEOWpwTGdPM2V6VjIyelZlZ0NKWG1RPQ==",
-		Url:         "https://restapi.tpondemand.com",
-	})
+	cli := NewClient(accessToken)
 
 	bug, err := cli.Bugs().Create(BugDescription{
 		Name:    "New Bug",
@@ -111,4 +107,17 @@ func TestBugsService_CreateAssigned(t *testing.T) {
 
 	assert.NoError(err)
 	assert.Equal(`New Bug`, bug.Name)
+}
+
+func TestBugsService_Delete(t *testing.T) {
+	assert := assert.New(t)
+	cli := NewClient(basicAuth)
+
+	reply, err := cli.Bugs().Search(nil)
+	assert.NoError(err)
+	assert.NotEmpty(reply.Items)
+	if len(reply.Items) != 0 {
+		err = cli.Bugs().Delete(reply.Items[0].Id)
+		assert.NoError(err)
+	}
 }
