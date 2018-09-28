@@ -33,54 +33,20 @@ func (b *BugsService) Search(query *Query) (BugsGetReply, error) {
 	}
 
 	var reply BugsGetReply
-	values := query.values()
-	b.client.prepare(&values)
-
-	url := fmt.Sprintf("%s%s?%s", b.client.Url(), bugEndpoint, values.Encode())
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	err := b.client.get(bugEndpoint, query.values(), &reply)
 	if err != nil {
 		return reply, err
 	}
-
-	resp, err := b.client.do(req)
-	if err != nil {
-		return reply, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return reply, b.client.extractError(resp)
-	}
-
-	dec := json.NewDecoder(resp.Body)
-	err = dec.Decode(&reply)
 
 	return reply, nil
 }
 
 func (b *BugsService) Get(id int64) (Bug, error) {
 	values := defaultQuery.values()
-	b.client.prepare(&values)
 
+	endpoint := fmt.Sprintf("%s/%d", bugEndpoint, id)
 	var bug Bug
-
-	url := fmt.Sprintf("%s%s/%d?%s", b.client.Url(), bugEndpoint, id, values.Encode())
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return bug, err
-	}
-
-	resp, err := b.client.do(req)
-	if err != nil {
-		return bug, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return bug, b.client.extractError(resp)
-	}
-
-	dec := json.NewDecoder(resp.Body)
-	err = dec.Decode(&bug)
+	err := b.client.get(endpoint, values, &bug)
 	return bug, err
 }
 

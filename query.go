@@ -40,6 +40,11 @@ func (q *Query) Inclde(fields ...string) *Query {
 	return q
 }
 
+func (q *Query) Append(fields ...string) *Query {
+	q.append = "[" + strings.Join(fields, ",") + "]"
+	return q
+}
+
 func Where(str string) *Query {
 	return NewQuery().Where(str)
 }
@@ -88,6 +93,14 @@ func (q *Query) values() url.Values {
 
 	if q.innerTake != 0 {
 		v.Add("innertake", strconv.Itoa(int(q.innerTake)))
+	}
+
+	if len(q.append) != 0 {
+		v.Add("append", q.append)
+	}
+
+	if len(q.where) != 0 {
+		v.Add("where", q.where)
 	}
 
 	if len(q.order.field) != 0 {

@@ -5,4 +5,6 @@ Features:
     - [x] GET
     - [x] POST
     - [x] Del
+- [x] /UserStories
+    - [x] GET
 

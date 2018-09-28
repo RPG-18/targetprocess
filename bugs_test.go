@@ -56,7 +56,7 @@ func TestBugsRequest_GetFromExample(t *testing.T) {
 			Order(OrderByDesc(`Effort`)).
 			Take(10))
 	assert.NoError(err)
-	assert.Equal(`https://restapi.tpondemand.com/api/v1/Bugs/?include=[Id,Name,Effort,Project]&orderByDesc=Effort&format=json&take=10&skip=10`, reply.Next)
+	assert.Equal(`https://restapi.tpondemand.com/api/v1/Bugs/?include=[Id,Name,Effort,Project]&where=(EntityState.IsFinal eq 'false')&orderByDesc=Effort&format=json&take=10&skip=10`, reply.Next)
 	assert.Len(reply.Items, 10)
 }
 
