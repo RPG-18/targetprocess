@@ -24,8 +24,9 @@ type TPClient struct {
 	httpClient *http.Client
 	opt        ClientOpt
 
-	bugs  *BugsService
-	story *UserStoryService
+	bugs        *BugsService
+	story       *UserStoryService
+	assignables *AssignableService
 }
 
 func NewClient(opt ClientOpt) TPClient {
@@ -45,6 +46,10 @@ func NewClient(opt ClientOpt) TPClient {
 		client: &cli,
 	}
 
+	cli.assignables = &AssignableService{
+		client: &cli,
+	}
+
 	return cli
 }
 
@@ -54,6 +59,10 @@ func (t *TPClient) Bugs() *BugsService {
 
 func (t *TPClient) Story() *UserStoryService {
 	return t.story
+}
+
+func (t *TPClient) Assignables() *AssignableService {
+	return t.assignables
 }
 
 func (t TPClient) Url() string {

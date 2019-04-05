@@ -7,4 +7,5 @@ Features:
     - [x] Del
 - [x] /UserStories
     - [x] GET
-
+- [x] /Assignables
+    - [x] GET
